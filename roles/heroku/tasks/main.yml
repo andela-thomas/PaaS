@@ -1,0 +1,40 @@
+---
+- name: Clone github repository
+  git:
+    repo: "{{ repository }}"
+    dest: app
+    clone: yes
+    update: no
+
+- name: Check if {{ app_name }} app exists
+  shell: heroku apps | grep {{ app_name }}
+  ignore_errors: true
+  register: find_app
+
+- name: create heroku app
+  command: chdir=app heroku create {{ app_name }}
+  when: find_app|failed
+
+- name: Deploy app to heroku
+  command: chdir=app git push heroku master
+  register: deploy
+
+- name: Scale app to many instances
+  when: deploy|success
+  shell: chdir=app heroku ps:scale web={{ number_of_instances }}
+
+
+- name: Check if database is configured
+  shell: chdir=app heroku pg:info
+  register: pg
+
+- name: Create a database for our app_name
+  when: pg|failed
+  shell: chdir=app heroku addons:create heroku-postgresql:hobby-dev
+
+- name: Open web app
+  when: deploy|success
+  shell: chdir=app heroku open
+
+
+

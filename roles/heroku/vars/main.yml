@@ -1,0 +1,5 @@
+---
+# vars file for heroku
+repository: https://github.com/andela-thomas/pass-example.git
+app_name: paas-xmpl
+number_of_instances: 1
